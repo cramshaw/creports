@@ -37,7 +37,7 @@ function App() {
         ...newElement,
         attributes: {
           ...newElement.attributes,
-          [attr]: parseInt(event.target.value),
+          [attr]: parseInt(event.target.value) || 0,
         },
       });
     }
@@ -58,7 +58,6 @@ function App() {
 
   const addElement = (event) => {
     event.preventDefault();
-    console.log("adding");
     setPageElements([newElement, ...pageElements]);
   };
 
@@ -143,7 +142,7 @@ function App() {
               value={newElement.attributes[`${attr}`]}
             ></TextField>
           ))}
-          <Button onClick={addElement}>Add an element</Button>
+          <Button onClick={addElement}>Add element</Button>
         </Box>
       </Container>
       <h4>Preview</h4>
