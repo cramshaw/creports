@@ -29,6 +29,7 @@ function App() {
 
   const [pdfInfo, setPdfInfo] = useState("");
 
+  // Default PDF schema
   const [pageElements, setPageElements] = useState([
     {
       component: "text",
@@ -57,11 +58,11 @@ function App() {
     //   }),
     // },
   ]);
-
   const updatePageElement = (newElement) => {
     setPageElements([...pageElements, newElement]);
   };
 
+  // Method to add headers
   const addHeader = (pdf) => {
     pdf.setFontSize(10);
     pdf.text(
@@ -71,11 +72,23 @@ function App() {
     );
   };
 
+  // Method to parse out of nested JSON using . notation
   const parseJson = (attr, data) => {
     const attrs = attr.split(".");
     return attrs.reduce((val, attr) => {
       return val[[attr]];
     }, data);
+  };
+
+  const renderAddComponent = (componentType) => {
+    switch (componentType) {
+      case "text":
+        return <AddText setPageElements={updatePageElement} />;
+      case "value":
+        return <AddValue setPageElements={updatePageElement} />;
+      case "table":
+        return <AddTable setPageElements={updatePageElement} />;
+    }
   };
 
   useEffect(() => {
@@ -142,7 +155,7 @@ function App() {
         }
       }
 
-      // Render final page number
+      // Add final page number
       addHeader(pdf);
 
       const docURI = pdf.output("datauristring");
@@ -152,27 +165,17 @@ function App() {
     createPDF();
   }, [pageElements]);
 
-  const renderAddComponent = (componentType) => {
-    switch (componentType) {
-      case "text":
-        return <AddText setPageElements={updatePageElement} />;
-      case "value":
-        return <AddValue setPageElements={updatePageElement} />;
-      case "table":
-        return <AddTable setPageElements={updatePageElement} />;
-    }
-  };
-
   return (
     <>
       <AppBar position="sticky">
-        <Typography variant="h2">PDF template builder</Typography>
+        <Typography variant="h3">PDF template builder</Typography>
       </AppBar>
       <Container
         sx={{
           marginTop: "20px",
         }}
       >
+        {/* Cards showing all current components */}
         <Typography variant="h4">Elements</Typography>
         <Grid container spacing={2}>
           {pageElements.map((element) => {
@@ -190,6 +193,7 @@ function App() {
         </Grid>
       </Container>
 
+      {/* Adding components */}
       <Container
         sx={{
           marginTop: "20px",
@@ -219,7 +223,8 @@ function App() {
         {renderAddComponent(componentType)}
       </Container>
 
-      <h4>Preview</h4>
+      {/* Preview */}
+      <Typography variant="h4">Preview</Typography>
       <iframe
         title="test-frame"
         style={{ width: "100%", height: "100%" }}
@@ -227,9 +232,14 @@ function App() {
         type="application/pdf"
       />
 
+      {/* Raw data */}
       <Typography variant="h4">Raw</Typography>
       <Box component="span" sx={{ display: "block" }}>
         <pre>{JSON.stringify(pageElements, null, 2)}</pre>
+      </Box>
+      <Typography variant="h4">Patient</Typography>
+      <Box component="span" sx={{ display: "block" }}>
+        <pre>{JSON.stringify(patientData, null, 2)}</pre>
       </Box>
     </>
   );
