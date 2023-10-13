@@ -1,150 +1,224 @@
 import { useEffect, useState } from "react";
-import { PDFDocument, PageSizes, StandardFonts, rgb } from "pdf-lib";
 import "./App.css";
 import {
   AppBar,
   Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Chip,
   Container,
+  FormControl,
   Grid,
-  TextField,
+  InputLabel,
+  MenuItem,
+  Select,
   Typography,
 } from "@mui/material";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import AddText from "./AddText";
+import TextCard from "./TextCard";
+import TableCard from "./TableCard";
+import AddTable from "./AddTable";
+import { patientData } from "./data";
+import AddValue from "./AddValue";
 
 function App() {
-  const [pdfInfo, setPdfInfo] = useState("");
+  const [componentType, setComponentType] = useState("text");
 
-  const [newElement, setNewElement] = useState({
-    component: "text",
-    text: "random text!",
-    attributes: {
-      x: 200,
-      y: 600,
-      size: 30,
-      color: rgb(0, 0.53, 0.71),
-    },
-  });
-
-  const updateNewElement = (attr, event) => {
-    if (Object.keys(newElement).includes(attr)) {
-      setNewElement({ ...newElement, [attr]: event.target.value });
-    } else {
-      setNewElement({
-        ...newElement,
-        attributes: {
-          ...newElement.attributes,
-          [attr]: parseInt(event.target.value) || 0,
-        },
-      });
-    }
+  const handleSelectComponent = (event) => {
+    setComponentType(event.target.value);
   };
+
+  const [pdfInfo, setPdfInfo] = useState("");
 
   const [pageElements, setPageElements] = useState([
     {
       component: "text",
-      text: "A bit of data!",
+      text: "PGX Report",
       attributes: {
-        x: 100,
-        y: 500,
         size: 30,
-        color: rgb(0, 0.53, 0.71),
       },
     },
+    {
+      component: "value",
+      value: "personal.name",
+      label: "Name",
+      attributes: {
+        size: 20,
+      },
+    },
+    {
+      component: "table-value",
+      value: "pgx.recommendations",
+    },
+    // {
+    //   component: "table",
+    //   head: ["Name", "Email", "Country"],
+    //   content: Array.from(Array(50).keys()).map(() => {
+    //     return ["David", "david@example.com", "Sweden"];
+    //   }),
+    // },
   ]);
 
-  const addElement = (event) => {
-    event.preventDefault();
-    setPageElements([newElement, ...pageElements]);
+  const updatePageElement = (newElement) => {
+    setPageElements([...pageElements, newElement]);
+  };
+
+  const addHeader = (pdf) => {
+    pdf.setFontSize(10);
+    pdf.text(
+      "Page " + pdf.getCurrentPageInfo().pageNumber,
+      10,
+      pdf.internal.pageSize.getHeight() - 10
+    );
+  };
+
+  const parseJson = (attr, data) => {
+    const attrs = attr.split(".");
+    return attrs.reduce((val, attr) => {
+      return val[[attr]];
+    }, data);
   };
 
   useEffect(() => {
     async function createPDF() {
-      const pdfDoc = await PDFDocument.create();
+      const pdf = new jsPDF("p", "pt", "a4");
 
-      // Embed the Times Roman font
-      // const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+      const MARGIN = 20; // Increase to allow for header
+      const FONT_SIZE = 30;
+      pdf.setFontSize(FONT_SIZE);
 
-      // Add a blank page to the document
-      const page = pdfDoc.addPage(PageSizes.A4);
-
-      // Get the width and height of the page
-      const { width, height } = page.getSize();
-
-      console.log(width, height);
+      let runningY = MARGIN;
 
       for (const element of pageElements) {
+        // Add page if no space left
+        if (runningY >= pdf.internal.pageSize.getHeight() - MARGIN) {
+          addHeader(pdf);
+          pdf.setFontSize(FONT_SIZE);
+          pdf.addPage("a4");
+          runningY = MARGIN;
+        }
+
+        // Draw components
         switch (element.component) {
           case "text":
-            page.drawText(element.text, element.attributes);
+            pdf.text(element.text, MARGIN, runningY + FONT_SIZE);
+            runningY = runningY + FONT_SIZE + MARGIN;
+            break;
+          case "value":
+            const value = parseJson(element.value, patientData);
+            pdf.text(
+              `${element.label}: ${value}`,
+              MARGIN,
+              runningY + FONT_SIZE
+            );
+            runningY = runningY + FONT_SIZE + MARGIN;
+            break;
+          case "table":
+            autoTable(pdf, {
+              head: [element.head],
+              body: element.content,
+              startY: runningY,
+              didDrawPage: function (data) {
+                addHeader(pdf);
+              },
+            });
+            runningY = pdf.lastAutoTable.finalY + 10;
+            break;
+          case "table-value":
+            const tableData = parseJson(element.value, patientData);
+            const head = tableData.slice(0, 1);
+            const body = tableData.slice(1);
+            autoTable(pdf, {
+              head: [...head],
+              body: body,
+              startY: runningY,
+              didDrawPage: function (data) {
+                addHeader(pdf);
+              },
+            });
+            runningY = pdf.lastAutoTable.finalY + 10;
             break;
           default:
             break;
         }
       }
 
-      // Serialize the PDFDocument to bytes (a Uint8Array)
-      const pdfBytes = await pdfDoc.save();
+      // Render final page number
+      addHeader(pdf);
 
-      const bytes = new Uint8Array(pdfBytes);
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const docUrl = URL.createObjectURL(blob);
-      setPdfInfo(docUrl);
+      const docURI = pdf.output("datauristring");
+      setPdfInfo(docURI);
     }
 
     createPDF();
   }, [pageElements]);
 
+  const renderAddComponent = (componentType) => {
+    switch (componentType) {
+      case "text":
+        return <AddText setPageElements={updatePageElement} />;
+      case "value":
+        return <AddValue setPageElements={updatePageElement} />;
+      case "table":
+        return <AddTable setPageElements={updatePageElement} />;
+    }
+  };
+
   return (
     <>
       <AppBar position="sticky">
-        <Typography variant="h2">PDF builder</Typography>
+        <Typography variant="h2">PDF template builder</Typography>
       </AppBar>
       <Container
         sx={{
-          margin: "20px",
+          marginTop: "20px",
         }}
       >
         <Typography variant="h4">Elements</Typography>
         <Grid container spacing={2}>
-          {pageElements.map((element) => (
-            <Grid item xs={3}>
-              <Card>
-                <CardContent>
-                  <CardHeader
-                    title={element.text}
-                    subheader={`${element.attributes.x}, ${element.attributes.y}`}
-                  />
-                  <Chip label={element.component} />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+          {pageElements.map((element) => {
+            switch (element.component) {
+              case "text":
+                return <TextCard element={element} />;
+              case "value":
+                return <TextCard element={element} />;
+              case "table":
+                return <TableCard element={element} />;
+              case "table-value":
+                return <TableCard element={element} />;
+            }
+          })}
         </Grid>
       </Container>
 
-      <Container>
-        <Box component="form">
-          {["text"].map((attr) => (
-            <TextField
-              label={attr}
-              onChange={(event) => updateNewElement(attr, event)}
-              value={newElement[attr]}
-            ></TextField>
-          ))}
-          {["x", "y"].map((attr) => (
-            <TextField
-              label={attr}
-              onChange={(event) => updateNewElement(attr, event)}
-              value={newElement.attributes[`${attr}`]}
-            ></TextField>
-          ))}
-          <Button onClick={addElement}>Add element</Button>
-        </Box>
+      <Container
+        sx={{
+          marginTop: "20px",
+        }}
+      >
+        <FormControl fullWidth>
+          <InputLabel>Component Type:</InputLabel>
+          <Select
+            value={componentType}
+            label="Component"
+            onChange={handleSelectComponent}
+          >
+            {["text", "table", "value"].map((val) => (
+              <MenuItem key={val} value={val}>
+                {val}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Container>
+
+      <Container
+        sx={{
+          marginTop: "20px",
+        }}
+      >
+        {renderAddComponent(componentType)}
+      </Container>
+
       <h4>Preview</h4>
       <iframe
         title="test-frame"
