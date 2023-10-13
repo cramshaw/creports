@@ -46,7 +46,7 @@ function App() {
   const [pageElements, setPageElements] = useState([
     {
       component: "text",
-      text: "I built this!",
+      text: "A bit of data!",
       attributes: {
         x: 100,
         y: 500,
@@ -153,6 +153,11 @@ function App() {
         src={pdfInfo}
         type="application/pdf"
       />
+
+      <Typography variant="h4">Raw</Typography>
+      <Box component="span" sx={{ display: "block" }}>
+        <pre>{JSON.stringify(pageElements, null, 2)}</pre>
+      </Box>
     </>
   );
 }
