@@ -1,5 +1,6 @@
-import { Box, TextField, Button } from "@mui/material";
+import { Box, TextField, Button, Grid } from "@mui/material";
 import { useState } from "react";
+import ValueInput from "./ValueInput";
 
 export default function AddTable({ setPageElements }) {
   const [newElement, setNewElement] = useState({
@@ -20,14 +21,23 @@ export default function AddTable({ setPageElements }) {
 
   return (
     <Box component="form">
-      {["value"].map((attr) => (
-        <TextField
-          label={attr}
-          onChange={(event) => updateNewElement(attr, event)}
-          value={newElement[attr]}
-        />
-      ))}
-      <Button onClick={addElement}>Add element</Button>
+      <Grid container spacing={2}>
+        {["value"].map((attr) => (
+          <>
+            <Grid item xs="12">
+              <ValueInput
+                value={newElement[[attr]]}
+                updateNewElement={updateNewElement}
+              />
+            </Grid>
+          </>
+        ))}
+        <Grid item xs="12">
+          <Button onClick={addElement} variant="contained">
+            Add element
+          </Button>
+        </Grid>
+      </Grid>
     </Box>
   );
 }
