@@ -13,21 +13,21 @@ export const patientData = {
     }
 }
 
-export const schemaData = {
-    personal: [
-        {
-            "field": "name",
-            "type": "string"
-        },
-        {
-            "field": "age",
-            "type": "number"
-        }
-    ],
-    pgx: [
-        {
-            "field": "recommendations",
-            "type": "table"
-        }
-    ]
-}
+// export const schemaData = {
+//     personal: [
+//         {
+//             "field": "name",
+//             "type": "string"
+//         },
+//         {
+//             "field": "age",
+//             "type": "number"
+//         }
+//     ],
+//     pgx: [
+//         {
+//             "field": "recommendations",
+//             "type": "table"
+//         }
+//     ]
+// }

@@ -19,6 +19,7 @@ import TableCard from "./TableCard";
 import AddTable from "./AddTable";
 import { patientData } from "./data";
 import AddValue from "./AddValue";
+import { parseJson } from "./utils";
 
 function App() {
   const [componentType, setComponentType] = useState("text");
@@ -70,14 +71,6 @@ function App() {
       10,
       pdf.internal.pageSize.getHeight() - 10
     );
-  };
-
-  // Method to parse out of nested JSON using . notation
-  const parseJson = (attr, data) => {
-    const attrs = attr.split(".");
-    return attrs.reduce((val, attr) => {
-      return val[[attr]];
-    }, data);
   };
 
   const renderAddComponent = (componentType) => {
@@ -199,6 +192,7 @@ function App() {
           marginTop: "20px",
         }}
       >
+        <Typography variant="h4">Add elements</Typography>
         <FormControl fullWidth>
           <InputLabel>Component Type:</InputLabel>
           <Select

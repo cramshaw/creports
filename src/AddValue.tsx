@@ -1,5 +1,6 @@
-import { Box, TextField, Button } from "@mui/material";
+import { Box, TextField, Button, Grid } from "@mui/material";
 import { useState } from "react";
+import ValueInput from "./ValueInput";
 
 export default function AddValue({ setPageElements }) {
   const [newElement, setNewElement] = useState({
@@ -24,21 +25,41 @@ export default function AddValue({ setPageElements }) {
 
   return (
     <Box component="form">
-      {["value", "label"].map((attr) => (
-        <TextField
-          label={attr}
-          onChange={(event) => updateNewElement(attr, event)}
-          value={newElement[attr]}
-        ></TextField>
-      ))}
-      {["size"].map((attr) => (
-        <TextField
-          label={attr}
-          onChange={(event) => updateNewElement(attr, event)}
-          value={newElement.attributes[`${attr}`]}
-        ></TextField>
-      ))}
-      <Button onClick={addElement}>Add element</Button>
+      <Grid container spacing={2}>
+        {["value"].map((attr) => (
+          <>
+            <Grid item xs="12">
+              <ValueInput
+                value={newElement[[attr]]}
+                updateNewElement={updateNewElement}
+              />
+            </Grid>
+          </>
+        ))}
+        {["label"].map((attr) => (
+          <Grid item sm="4">
+            <TextField
+              label={attr}
+              onChange={(event) => updateNewElement(attr, event)}
+              value={newElement[attr]}
+            ></TextField>
+          </Grid>
+        ))}
+        {["size"].map((attr) => (
+          <Grid item sm="4">
+            <TextField
+              label={attr}
+              onChange={(event) => updateNewElement(attr, event)}
+              value={newElement.attributes[`${attr}`]}
+            ></TextField>
+          </Grid>
+        ))}
+        <Grid item sm="3">
+          <Button onClick={addElement} variant="contained">
+            Add element
+          </Button>
+        </Grid>
+      </Grid>
     </Box>
   );
 }
