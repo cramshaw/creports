@@ -45,7 +45,9 @@ export default function AddText({ setPageElements }) {
           value={newElement.attributes[`${attr}`]}
         ></TextField>
       ))}
-      <Button onClick={addElement}>Add element</Button>
+      <Button variant="contained" onClick={addElement}>
+        Add element
+      </Button>
     </Box>
   );
 }

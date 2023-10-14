@@ -64,7 +64,7 @@ function App() {
   };
 
   // Method to add headers
-  const addHeader = (pdf) => {
+  const addFooter = (pdf) => {
     pdf.setFontSize(10);
     pdf.text(
       "Page " + pdf.getCurrentPageInfo().pageNumber,
@@ -88,7 +88,8 @@ function App() {
     async function createPDF() {
       const pdf = new jsPDF("p", "pt", "a4");
 
-      const MARGIN = 20; // Increase to allow for header
+      const MARGIN = 40; // Increase to allow for header
+      const SPACING = MARGIN / 2; // Increase to allow for header
       const FONT_SIZE = 30;
       pdf.setFontSize(FONT_SIZE);
 
@@ -97,7 +98,7 @@ function App() {
       for (const element of pageElements) {
         // Add page if no space left
         if (runningY >= pdf.internal.pageSize.getHeight() - MARGIN) {
-          addHeader(pdf);
+          addFooter(pdf);
           pdf.setFontSize(FONT_SIZE);
           pdf.addPage("a4");
           runningY = MARGIN;
@@ -107,7 +108,7 @@ function App() {
         switch (element.component) {
           case "text":
             pdf.text(element.text, MARGIN, runningY + FONT_SIZE);
-            runningY = runningY + FONT_SIZE + MARGIN;
+            runningY = runningY + FONT_SIZE + SPACING;
             break;
           case "value":
             const value = parseJson(element.value, patientData);
@@ -124,7 +125,7 @@ function App() {
               body: element.content,
               startY: runningY,
               didDrawPage: function (data) {
-                addHeader(pdf);
+                addFooter(pdf);
               },
             });
             runningY = pdf.lastAutoTable.finalY + 10;
@@ -138,7 +139,7 @@ function App() {
               body: body,
               startY: runningY,
               didDrawPage: function (data) {
-                addHeader(pdf);
+                addFooter(pdf);
               },
             });
             runningY = pdf.lastAutoTable.finalY + 10;
@@ -149,7 +150,7 @@ function App() {
       }
 
       // Add final page number
-      addHeader(pdf);
+      addFooter(pdf);
 
       const docURI = pdf.output("datauristring");
       setPdfInfo(docURI);
